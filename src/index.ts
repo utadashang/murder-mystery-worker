@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { ROLE_CARD_OVERRIDES } from "./generatedRoleCards";
 
 type ScriptId = string;
 
@@ -487,6 +488,21 @@ function simpleScript(input: {
 }
 
 function applyRoleOverrides() {
+  for (const [scriptId, cards] of Object.entries(ROLE_CARD_OVERRIDES)) {
+    const script = SCRIPTS[scriptId];
+    if (!script) continue;
+
+    for (const [roleName, card] of Object.entries(cards)) {
+      const target = script.roles.find((item) => item.name === roleName);
+      if (!target) continue;
+
+      target.privateByPhase = {
+        ...target.privateByPhase,
+        ...(card as Record<string, string>)
+      };
+    }
+  }
+
   const rainy = SCRIPTS["rainy-manor"];
   const suwan = rainy.roles.find((item) => item.id === "a2");
   if (!suwan) return;
